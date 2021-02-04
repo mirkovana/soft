@@ -75,7 +75,7 @@ def convert_output(outputs):
 def create_ann():
     ann = Sequential()
     ann.add(Dense(128, input_dim=784, activation='sigmoid'))
-    ann.add(Dense(60, activation='sigmoid'))
+    ann.add(Dense(10, activation='sigmoid'))
     return ann
 
 def train_ann(ann, x_train, y_train):
@@ -118,7 +118,7 @@ def select_roi(image_orig, image_bin):
 
     contours, hierarchy = cv2.findContours(image_bin.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(image_orig, contours, -1, (255, 0, 0), 1)
-    print("BORJ KONTURA", len(contours))
+    print("BROJ KONTURA", len(contours))
     display_image(image_orig)
     sorted_regions = []  # lista sortiranih regiona po X osi
     regions_array = []
@@ -129,7 +129,7 @@ def select_roi(image_orig, image_bin):
         # print("NAS W", w)
         # print("NAS H", h)
         area = cv2.contourArea(contour)
-        print("AREAAAA", area)
+        #print("AREAAAA", area)
         if area > 100 and h < 100 and h > 65 and w > 11:
             # kopirati [y:y+h+1, x:x+w+1] sa binarne slike i smestiti u novu sliku
             # oznaciti region pravougaonikom na originalnoj slici sa rectangle funkcijom
@@ -142,9 +142,7 @@ def select_roi(image_orig, image_bin):
     regions_array = sorted(regions_array, key=lambda x: x[1][0])
     #za izbacivanje
     #outer_regions = remove_inner_region(regions_array)
-    print("ziv sam")
     #crtkaj = draw_rectangles(image_orig, outer_regions)
-    print("nacrtao sam")
     #display_image(crtkaj)
     sorted_regions = [region[0] for region in regions_array]
     return image_orig, sorted_regions
@@ -183,9 +181,9 @@ def train_or_load_character_recognition_model(train_image_paths, serialization_f
 
     selected_regions, letters = select_roi(image_color.copy(), image_erode)
     alphabet = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    print("SR", selected_regions)
+    #print("SR", selected_regions)
     display_image(selected_regions)
-    print("leee", letters)
+    #print("leee", letters)
     #for let in letters:
      #   display_image(let)
     inputs = prepare_for_ann(letters)
@@ -217,6 +215,6 @@ def train_or_load_character_recognition_model(train_image_paths, serialization_f
     return ann
 
 if __name__ == '__main__':
-    print("ADSASD")
+    print("SAD")
     train_or_load_character_recognition_model(train_image_paths, SERIALIZATION_FOLDER_PATH)
     print("KRAJ")
