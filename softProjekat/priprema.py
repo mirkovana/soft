@@ -10,23 +10,28 @@ from keras.optimizers import SGD
 from keras.models import model_from_json
 import os
 import matplotlib.image as mpimg
+from scipy import signal
 
 # Sklearn biblioteka sa implementiranim K-means algoritmom
 from sklearn import datasets
 from sklearn.cluster import KMeans
 #train_image_paths = '.'+os.path.sep+'dataset'+os.path.sep+'trening'+os.path.sep+'Digital-Numbers.png'
-#train_image_paths = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\trening\Digital-Numbers.png'
-train_image_paths = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\trening\Digital-Numbers - Copy.png'
+train_image_paths = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\trening\Digital-Numbers - Copy (2).png'
+#train_image_paths = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\trening\Digital-Numbers - Copy.png'
+#test_image_path = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\0a1e1c676aa31a9f56818e580d7a2e20689fefba.jpg'
+test_image_path = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\0b7d7c92f3a0f9f466067984a57a494b01ee894f.jpg'
 
 SERIALIZATION_FOLDER_PATH = '.'+os.path.sep+'serialized_model'+os.path.sep
 
 def display_image(image, color=False):
-    imgplot = plt.imshow(image)
-    plt.show()
-    # if color:
-    #     plt.imshow(image)
-    # else:
-    #     plt.imshow(image, 'gray')
+    # imgplot = plt.imshow(image)
+    # plt.show()
+    if color:
+        plt.imshow(image)
+        plt.show()
+    else:
+        plt.imshow(image, 'gray')
+        plt.show()
 
 def load_image(path):
     return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
@@ -42,13 +47,24 @@ def image_bin1(image_gs):
 
     return image_bin
 
+def image_bin2(image_gs):
+    imgray = cv2.equalizeHist(image_gs)  # global
+    ret,image_bin = cv2.threshold(imgray, 15, 255, cv2.THRESH_BINARY)
+    #image_bin = cv2.adaptiveThreshold(imgray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+
+    return image_bin
+
 def dilate(image):
     kernel = np.ones((3, 3))
     return cv2.dilate(image, kernel, iterations=1)
 
 def erode(image):
     kernel = np.ones((3, 3))
-    return cv2.erode(image, kernel, iterations=1)
+    return cv2.erode(image, kernel, iterations=5)
+
+def erode2(image):
+    kernel = np.ones((3, 3))
+    return cv2.erode(image, kernel, iterations=5)
 
 def invert(image):
     return 255 - image
@@ -62,6 +78,9 @@ def scale_to_range(image):
 
 def matrix_to_vector(image):
     return image.flatten()
+
+def winner(output):
+    return max(enumerate(output), key=lambda x: x[1])[0]
 
 def prepare_for_ann(regions):
     ready_for_ann = []
@@ -130,7 +149,8 @@ def select_roi(image_orig, image_bin):
         # print("NAS H", h)
         area = cv2.contourArea(contour)
         #print("AREAAAA", area)
-        if area > 100 and h < 100 and h > 65 and w > 11:
+        #if area > 100 and h < 100 and h > 65 and w > 11:
+        if area > 100 and h < 120 and h > 65 and w > 11:
             # kopirati [y:y+h+1, x:x+w+1] sa binarne slike i smestiti u novu sliku
             # oznaciti region pravougaonikom na originalnoj slici sa rectangle funkcijom
             if w<30:
@@ -148,6 +168,40 @@ def select_roi(image_orig, image_bin):
     return image_orig, sorted_regions
 
 
+def select_roi2(image_orig, image_bin):
+    '''
+    Funkcija kao u vežbi 2, iscrtava pravougaonike na originalnoj slici, pronalazi sortiran niz regiona sa slike,
+    i dodatno treba da sačuva rastojanja između susednih regiona.
+    '''
+
+    contours, hierarchy = cv2.findContours(image_bin.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(image_orig, contours, -1, (255, 0, 0), 1)
+    print("BROJ KONTURA 2 ", len(contours))
+    display_image(image_orig)
+    sorted_regions = []  # lista sortiranih regiona po X osi
+    regions_array = []
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)  # koordinate i velicina granicnog pravougaonika
+        # print("NAS X", x)
+        # print("NAS Y", y)
+        print("NAS W", w)
+        print("NAS H", h)
+        area = cv2.contourArea(contour)
+        print("AREAAAA", area)
+        if  h < 300 and h > 280:
+            # kopirati [y:y+h+1, x:x+w+1] sa binarne slike i smestiti u novu sliku
+            # oznaciti region pravougaonikom na originalnoj slici sa rectangle funkcijom
+            region = image_bin[y:y + h + 1, x:x + w + 1]
+            regions_array.append([resize_region(region), (x, y, w, h)])
+            cv2.rectangle(image_orig, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    regions_array = sorted(regions_array, key=lambda x: x[1][0])
+    #za izbacivanje
+    #outer_regions = remove_inner_region(regions_array)
+    #crtkaj = draw_rectangles(image_orig, outer_regions)
+    #display_image(crtkaj)
+    sorted_regions = [region[0] for region in regions_array]
+    return image_orig, sorted_regions
 
 def train_or_load_character_recognition_model(train_image_paths, serialization_folder):
     """
@@ -214,7 +268,48 @@ def train_or_load_character_recognition_model(train_image_paths, serialization_f
 
     return ann
 
+
+def display_result(outputs, alphabet):
+    result = []
+    for output in outputs:
+        result.append(alphabet[winner(output)])
+    return result
+
+def extract_text_from_image(trained_model, image_path):
+    alphabet = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+    image_color = load_image(image_path)
+    img_gray = image_gray(image_color)
+    # display_image(img_gray)
+    img = image_bin2(image_gray(image_color))
+    # display_image(img)
+
+    #dil1 = dilate(img)
+    #display_image(dil1)
+
+    image_erode = erode2(img)
+    # display_image(image_erode)
+
+    dil1 = dilate(image_erode)
+    # display_image(dil1)
+
+    inv = invert(dil1)
+    # display_image(inv)
+
+    selected_regions, letters = select_roi2(image_color.copy(), dil1)
+    display_image(selected_regions)
+
+    for let in letters:
+      display_image(let)
+
+    test_inputs = prepare_for_ann(letters)
+    result = ann.predict(np.array(test_inputs, np.float32))
+    print(display_result(result, alphabet))
+
+
+
 if __name__ == '__main__':
     print("SAD")
-    train_or_load_character_recognition_model(train_image_paths, SERIALIZATION_FOLDER_PATH)
+    ann = train_or_load_character_recognition_model(train_image_paths, SERIALIZATION_FOLDER_PATH)
+    extract_text_from_image(ann, test_image_path)
     print("KRAJ")
