@@ -23,10 +23,43 @@ train_image_paths2 = r'C:\Users\Marija\Desktop\soft\softProjekat\dataset\trening
 train_image_paths3 = r'C:\Users\Marija\Desktop\soft\softProjekat\dataset\trening\digital-number-3.png'
 #train_image_paths = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\trening\Digital-Numbers - Copy.png'
 #test_image_path = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\0a1e1c676aa31a9f56818e580d7a2e20689fefba.jpg'
-test_image_path = r'C:\Users\Marija\Desktop\soft\softProjekat\dataset\0a1e1c676aa31a9f56818e580d7a2e20689fefba.jpg'
+test_image_path = '.'+os.path.sep+'dataset'+os.path.sep+'73bdc1e381510f46aac391bddd99d2dee1f39e8d.jpg'
 
 SERIALIZATION_FOLDER_PATH = '.'+os.path.sep+'serialized_model'+os.path.sep
+def select_roi2(image_orig, image_bin):
+    '''
+    Funkcija kao u vežbi 2, iscrtava pravougaonike na originalnoj slici, pronalazi sortiran niz regiona sa slike,
+    i dodatno treba da sačuva rastojanja između susednih regiona.
+    '''
 
+    contours, hierarchy = cv2.findContours(image_bin.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(image_orig, contours, -1, (255, 0, 0), 1)
+    # print("BROJ KONTURA 2 ", len(contours))
+    display_image(image_orig)
+    sorted_regions = []  # lista sortiranih regiona po X osi
+    regions_array = []
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)  # koordinate i velicina granicnog pravougaonika
+        # print("NAS X", x)
+        # print("NAS Y", y)
+        # print("NAS W", w)
+        print("NAS H", h)
+        area = cv2.contourArea(contour)
+        #print("AREAAAA", area)
+        if h>visina_displeja/2 and h<visina_displeja:
+            # kopirati [y:y+h+1, x:x+w+1] sa binarne slike i smestiti u novu sliku
+            # oznaciti region pravougaonikom na originalnoj slici sa rectangle funkcijom
+            region = image_bin[y:y + h + 1, x:x + w + 1]
+            regions_array.append([resize_region(region), (x, y, w, h)])
+            cv2.rectangle(image_orig, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    regions_array = sorted(regions_array, key=lambda x: x[1][0])
+    #za izbacivanje
+    #outer_regions = remove_inner_region(regions_array)
+    #crtkaj = draw_rectangles(image_orig, outer_regions)
+    #display_image(crtkaj)
+    sorted_regions = [region[0] for region in regions_array]
+    return image_orig, sorted_regions
 def display_image(image, color=False):
     # imgplot = plt.imshow(image)
     # plt.show()
@@ -60,7 +93,7 @@ def image_bin1(image_gs):
 
 def image_bin2(image_gs):
     imgray = cv2.equalizeHist(image_gs)  # global
-    ret,image_bin = cv2.threshold(imgray, 15, 255, cv2.THRESH_BINARY)
+    ret,image_bin = cv2.threshold(imgray, 25, 255, cv2.THRESH_BINARY)
     #image_bin = cv2.adaptiveThreshold(imgray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 2)
     #otsu_threshold, image_bin = cv2.threshold(imgray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     display_image(image_bin)
@@ -182,40 +215,7 @@ def select_roi(image_orig, image_bin):
     return image_orig, sorted_regions
 
 
-def select_roi2(image_orig, image_bin):
-    '''
-    Funkcija kao u vežbi 2, iscrtava pravougaonike na originalnoj slici, pronalazi sortiran niz regiona sa slike,
-    i dodatno treba da sačuva rastojanja između susednih regiona.
-    '''
 
-    contours, hierarchy = cv2.findContours(image_bin.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(image_orig, contours, -1, (255, 0, 0), 1)
-    # print("BROJ KONTURA 2 ", len(contours))
-    display_image(image_orig)
-    sorted_regions = []  # lista sortiranih regiona po X osi
-    regions_array = []
-    for contour in contours:
-        x, y, w, h = cv2.boundingRect(contour)  # koordinate i velicina granicnog pravougaonika
-        # print("NAS X", x)
-        # print("NAS Y", y)
-        # print("NAS W", w)
-        # print("NAS H", h)
-        area = cv2.contourArea(contour)
-        #print("AREAAAA", area)
-        if h>visina_displeja/2 and  h < visina_displeja:
-            # kopirati [y:y+h+1, x:x+w+1] sa binarne slike i smestiti u novu sliku
-            # oznaciti region pravougaonikom na originalnoj slici sa rectangle funkcijom
-            region = image_bin[y:y + h + 1, x:x + w + 1]
-            regions_array.append([resize_region(region), (x, y, w, h)])
-            cv2.rectangle(image_orig, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    regions_array = sorted(regions_array, key=lambda x: x[1][0])
-    #za izbacivanje
-    #outer_regions = remove_inner_region(regions_array)
-    #crtkaj = draw_rectangles(image_orig, outer_regions)
-    #display_image(crtkaj)
-    sorted_regions = [region[0] for region in regions_array]
-    return image_orig, sorted_regions
 
 def train_or_load_character_recognition_model(train_image_paths,train_image_paths2,train_image_paths3, serialization_folder):
     """

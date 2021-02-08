@@ -16,7 +16,7 @@ def dilate(image):
 
 def erode(image):
     kernel = np.ones((3, 3))
-    return cv2.erode(image, kernel, iterations=5)
+    return cv2.erode(image, kernel, iterations=10)
 def image_gray(image):
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 def image_blur(img_gray):
@@ -31,8 +31,9 @@ def image_bin1(image_gs):
     imgray = cv2.equalizeHist(image_gs)  # global
     # plt.imshow(imgray, 'gray')
     # plt.show()
-    otsu_threshold, image_bin = cv2.threshold(imgray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
+    #otsu_threshold, image_bin = cv2.threshold(imgray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    ret, image_bin = cv2.threshold(imgray, 70, 255, cv2.THRESH_BINARY)
+    display_image(image_bin)
     return image_bin
 
 
@@ -71,21 +72,33 @@ def select_roi(image_orig, image_bin):
     Funkcija kao u vežbi 2, iscrtava pravougaonike na originalnoj slici, pronalazi sortiran niz regiona sa slike,
     i dodatno treba da sačuva rastojanja između susednih regiona.
     '''
+    v = np.median(image_bin)
+    sigma = 0.35
+    lower = int(max(0, (1.0 - sigma) * v))
+    upper = int(min(255, (1.0 + sigma) * v))
+    edge =cv2.Canny(image_bin, lower, upper)
 
-    contours, hierarchy = cv2.findContours(image_bin.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(edge, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(image_orig, contours, -1, (255, 0, 0), 1)
     print("BROJ KONTURA", len(contours))
     display_image(image_orig)
-
+    regions_array = []
     sirine = []
     visine = []
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)  # koordinate i velicina granicnog pravougaonika
         sirine.append(w)
         visine.append(h)
+        region = image_bin[y:y + h + 1, x:x + w + 1]
+        regions_array.append([resize_region(region), (x, y, w, h)])
+        cv2.rectangle(image_orig, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    regions_array = sorted(regions_array, key=lambda x: x[1][0])
+    sorted_regions = [region[0] for region in regions_array]
+    display_image(image_orig)
     visine.sort(reverse=True)
     sirine.sort(reverse=True)
-    povratna_visina = visine[1]
-    sirina_povratna = sirine[1]
-
+    povratna_visina = visine[0]
+    sirina_povratna = sirine[0]
+    for vis in visine:
+        print("AAAAAAAAAAAAAAAAAAAAA", vis)
     return povratna_visina, sirina_povratna
