@@ -33,7 +33,7 @@ def image_bin1(image_gs):
     # plt.show()
     #otsu_threshold, image_bin = cv2.threshold(imgray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     ret, image_bin = cv2.threshold(imgray, 70, 255, cv2.THRESH_BINARY)
-    display_image(image_bin)
+    #display_image(image_bin)
     return image_bin
 
 
@@ -81,7 +81,7 @@ def select_roi(image_orig, image_bin):
     contours, hierarchy = cv2.findContours(edge, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(image_orig, contours, -1, (255, 0, 0), 1)
     print("BROJ KONTURA", len(contours))
-    display_image(image_orig)
+    #display_image(image_orig)
     regions_array = []
     sirine = []
     visine = []
@@ -94,11 +94,9 @@ def select_roi(image_orig, image_bin):
         cv2.rectangle(image_orig, (x, y), (x + w, y + h), (0, 255, 0), 2)
     regions_array = sorted(regions_array, key=lambda x: x[1][0])
     sorted_regions = [region[0] for region in regions_array]
-    display_image(image_orig)
+    #display_image(image_orig)
     visine.sort(reverse=True)
     sirine.sort(reverse=True)
     povratna_visina = visine[0]
     sirina_povratna = sirine[0]
-    for vis in visine:
-        print("AAAAAAAAAAAAAAAAAAAAA", vis)
     return povratna_visina, sirina_povratna
