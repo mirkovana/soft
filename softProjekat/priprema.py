@@ -27,7 +27,7 @@ train_image_paths3 = '.'+os.path.sep+'dataset'+os.path.sep+'trening'+os.path.sep
 #train_image_paths3 = r'C:\Users\Marija\Desktop\soft\softProjekat\dataset\trening\digital-number-3.png'
 #train_image_paths = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\trening\Digital-Numbers - Copy.png'
 #test_image_path = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\0a1e1c676aa31a9f56818e580d7a2e20689fefba.jpg'
-test_image_path = '.'+os.path.sep+'dataset'+os.path.sep+'056bd385ae19c3f5e9e8873db28c7a1266de4a6a.jpg'
+test_image_path = '.'+os.path.sep+'dataset'+os.path.sep+'validation'+os.path.sep+'0cc9f2fa15d86c32226e491ef2d3bd093e3acf3c.jpg'
 
 SERIALIZATION_FOLDER_PATH = '.'+os.path.sep+'serialized_model'+os.path.sep
 def select_roi2(image_orig, image_bin):
@@ -50,7 +50,7 @@ def select_roi2(image_orig, image_bin):
         #print("NAS H", h)
         area = cv2.contourArea(contour)
         #print("AREAAAA", area)
-        if h>2*visina_displeja/3 and h<=visina_displeja and w<290:
+        if h>1.9*visina_displeja/3 and h<=visina_displeja and w<290:
             # kopirati [y:y+h+1, x:x+w+1] sa binarne slike i smestiti u novu sliku
             # oznaciti region pravougaonikom na originalnoj slici sa rectangle funkcijom
             region = image_bin[y:y + h + 1, x:x + w + 1]
@@ -126,7 +126,7 @@ def erode(image):
 #za testiranje
 def erode2(image):
     kernel = np.ones((2, 2))
-    return cv2.erode(image, kernel, iterations=6)
+    return cv2.erode(image, kernel, iterations=11)
 
 #za trening
 def erode3(image):
@@ -367,10 +367,11 @@ def extract_text_from_image(trained_model, image_path):
     # display_image(inv)
 
     selected_regions, letters = select_roi2(image_color.copy(), dil1)
-    #display_image(selected_regions)
+    # display_image(selected_regions)
 
     # for let in letters:
-    #     #   display_image(let)
+    #    display_image(let)
+
     rez=[]
     res = ''
     if len(letters)>0 : #da ne bi pucao porgram kada ne nadje displej
@@ -386,38 +387,46 @@ def extract_text_from_image(trained_model, image_path):
 if __name__ == '__main__':
     print("SAD")
     ann = train_or_load_character_recognition_model(train_image_paths, train_image_paths2,train_image_paths3, SERIALIZATION_FOLDER_PATH)
-    visina_displeja, sirina_displeja = ds.display_size(test_image_path)
-    #print("sirina i visina" , visina_displeja)
-    #extract_text_from_image(ann, test_image_path)
+    visina_displeja = 0
+    sirina_displeja = 0
+    # visina_displeja, sirina_displeja = ds.display_size(test_image_path)
+    # print("sirina i visina" , visina_displeja)
+    # extract_text_from_image(ann, test_image_path)
 
     #---------------------------------------------EVALUACIJA--------------------------------------------------
     if len(sys.argv) > 1:
         VALIDATION_DATASET_PATH = sys.argv[1]
     else:
-        VALIDATION_DATASET_PATH = '.' + os.path.sep + 'dataset' + os.path.sep
+        VALIDATION_DATASET_PATH = '.' + os.path.sep + 'dataset' + os.path.sep+'validation'+os.path.sep
 
     #izvrsiti citanje teksta sa svih fotografija iz validacionog skupa podataka, koriscenjem istreniranog modela
     processed_image_names = []
     extracted_text = []
 
-    # for image_path in glob.glob(VALIDATION_DATASET_PATH + "*.jpg"): -----SA OVIM JE REKAO DA IMA VISE NONE NEGO STO IH JE STVARNO
-    #     image_directory, image_name = os.path.split(image_path)
-    #     processed_image_names.append(image_name)
-    #     extracted_text.append(extract_text_from_image(ann, image_path))
+    for image_path in glob.glob(VALIDATION_DATASET_PATH + "*.jpg"): # -----SA OVIM JE REKAO DA IMA VISE NONE NEGO STO IH JE STVARNO
+        visina_displeja, sirina_displeja = ds.display_size(image_path)
+        image_directory, image_name = os.path.split(image_path)
+        processed_image_names.append(image_name)
+        # extracted_text.append(extract_text_from_image(ann, image_path))
+        result = extract_text_from_image(ann, image_path)
+        r = ''
+        for res in result:
+             r += res
+        extracted_text.append(r)
 
-    for image_path in os.listdir(VALIDATION_DATASET_PATH):
-        print(image_path)
-        if image_path.endswith(".jpg"):
-            image_directory, image_name = os.path.split(VALIDATION_DATASET_PATH + image_path)
-            processed_image_names.append(image_path)
-            print("VRACENO ", extract_text_from_image(ann, VALIDATION_DATASET_PATH + image_path))
-            result = extract_text_from_image(ann, VALIDATION_DATASET_PATH + image_path)
-            r = ''
-            for res in result:
-                r += res
-            extracted_text.append(r)
-        else:
-            continue
+    # for image_path in glob.glob(VALIDATION_DATASET_PATH + "*.jpg"):
+    #     print(image_path)
+    #     if image_path.endswith(".jpg"):
+    #         image_directory, image_name = os.path.split(VALIDATION_DATASET_PATH + image_path)
+    #         processed_image_names.append(image_path)
+    #         print("VRACENO ", extract_text_from_image(ann, VALIDATION_DATASET_PATH + image_path))
+    #         result = extract_text_from_image(ann, VALIDATION_DATASET_PATH + image_path)
+    #         r = ''
+    #         for res in result:
+    #             r += res
+    #         extracted_text.append(r)
+    #     else:
+    #         continue
 
     # -----------------------------------------------------------------
     # Kreiranje fajla sa rezultatima ekstrakcije za svaku sliku

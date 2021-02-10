@@ -1,6 +1,7 @@
 import statistics
 import sys
 import os
+from difflib import SequenceMatcher
 
 labeled_samples = dict()
 
@@ -33,15 +34,13 @@ with open('result.csv', encoding='utf-8') as file:
         results[cols[0]] = cols[1]
 
 
-def jaccard_similarity(string_1, string_2):
-    s1 = set(string_1.split())
-    s2 = set(string_2.split())
-    return len(s1.intersection(s2)) / len(s1.union(s2))
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
 # evaluate how results file matches the labelled samples
 similarities = []
 for labeled_image_name in labeled_samples:
-    similarity = jaccard_similarity(labeled_samples[labeled_image_name], results[labeled_image_name])
+    similarity = similar(labeled_samples[labeled_image_name], results[labeled_image_name])
     similarities.append(similarity*100)
 
 percentage = statistics.mean(similarities)

@@ -6,19 +6,24 @@ import matplotlib.pyplot as plt
 def resize_region(region):
     resized = cv2.resize(region, (28, 28), interpolation=cv2.INTER_NEAREST)
     return resized
+
 def invert(image):
     return 255 - image
+
 def load_image(path):
     return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+
 def dilate(image):
     kernel = np.ones((3, 3))
     return cv2.dilate(image, kernel, iterations=5)
 
 def erode(image):
     kernel = np.ones((3, 3))
-    return cv2.erode(image, kernel, iterations=10)
+    return cv2.erode(image, kernel, iterations=1)
+
 def image_gray(image):
     return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
 def image_blur(img_gray):
     k_size = 5
     k = (1. / k_size * k_size) * np.ones((k_size, k_size))
@@ -63,7 +68,7 @@ def display_size(train_image_paths):
     # plt.imshow(inv, 'gray')
     # plt.show()
 
-    povratna_visina, sirina_povratna = select_roi(image_color.copy(), dil1)
+    povratna_visina, sirina_povratna = select_roi(image_color.copy(), image_erode)
     return povratna_visina, sirina_povratna
 
 
@@ -94,7 +99,7 @@ def select_roi(image_orig, image_bin):
         cv2.rectangle(image_orig, (x, y), (x + w, y + h), (0, 255, 0), 2)
     regions_array = sorted(regions_array, key=lambda x: x[1][0])
     sorted_regions = [region[0] for region in regions_array]
-    #display_image(image_orig)
+    # display_image(image_orig)
     visine.sort(reverse=True)
     sirine.sort(reverse=True)
     povratna_visina = visine[0]
