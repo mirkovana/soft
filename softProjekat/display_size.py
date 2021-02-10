@@ -99,7 +99,7 @@ def select_roi(image_orig, image_bin):
         cv2.rectangle(image_orig, (x, y), (x + w, y + h), (0, 255, 0), 2)
     regions_array = sorted(regions_array, key=lambda x: x[1][0])
     sorted_regions = [region[0] for region in regions_array]
-    # display_image(image_orig)
+    #display_image(image_orig)
     visine.sort(reverse=True)
     sirine.sort(reverse=True)
     povratna_visina = visine[0]

@@ -45,4 +45,4 @@ for labeled_image_name in labeled_samples:
 
 percentage = statistics.mean(similarities)
 
-print(percentage)
+print("PROCENAT TACNOSTI RESENJA => ",percentage)

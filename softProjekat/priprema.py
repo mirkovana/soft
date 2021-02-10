@@ -27,8 +27,8 @@ train_image_paths3 = '.'+os.path.sep+'dataset'+os.path.sep+'trening'+os.path.sep
 #train_image_paths3 = r'C:\Users\Marija\Desktop\soft\softProjekat\dataset\trening\digital-number-3.png'
 #train_image_paths = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\trening\Digital-Numbers - Copy.png'
 #test_image_path = r'C:\Users\Ana\Desktop\soft\softProjekat\dataset\0a1e1c676aa31a9f56818e580d7a2e20689fefba.jpg'
-test_image_path = '.'+os.path.sep+'dataset'+os.path.sep+'validation'+os.path.sep+'0cc9f2fa15d86c32226e491ef2d3bd093e3acf3c.jpg'
-
+#test_image_path = '.'+os.path.sep+'dataset'+os.path.sep+'validation'+os.path.sep+'0cc9f2fa15d86c32226e491ef2d3bd093e3acf3c.jpg'
+#test_image_path = r'C:\Users\Marija\Desktop\popravke\cc3f2c7a152b1353e4d0149ea4516bed71c781df.jpg'
 SERIALIZATION_FOLDER_PATH = '.'+os.path.sep+'serialized_model'+os.path.sep
 def select_roi2(image_orig, image_bin):
     '''
@@ -367,7 +367,7 @@ def extract_text_from_image(trained_model, image_path):
     # display_image(inv)
 
     selected_regions, letters = select_roi2(image_color.copy(), dil1)
-    # display_image(selected_regions)
+    #display_image(selected_regions)
 
     # for let in letters:
     #    display_image(let)
